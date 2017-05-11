@@ -1,6 +1,7 @@
 'use strict';
 const got = require('got');
 const isPlainObj = require('is-plain-obj');
+const createErrorClass = require('create-error-class');
 
 function ghGot(path, opts) {
 	if (typeof path !== 'string') {
@@ -39,13 +40,13 @@ function ghGot(path, opts) {
 	const url = /^https?/.test(path) ? path : opts.endpoint + path;
 
 	if (opts.stream) {
-		return got.stream(url, opts).catch((err)  => {
-			throw `GithubError: ${err.statusMessage} (${err.statusCode})`;
+		return got.stream(url, opts).catch(err => {
+			throw new ghGot.GithubError(err.statusMessage, err.statusCode);
 		});
 	}
 
-	return got(url, opts).catch((err)  => {
-		throw `GithubError: ${err.statusMessage} (${err.statusCode})`;
+	return got(url, opts).catch(err => {
+		throw new ghGot.GithubError(err.statusMessage, err.statusCode);
 	});
 }
 
@@ -68,5 +69,9 @@ for (const x of helpers) {
 	ghGot[x] = (url, opts) => ghGot(url, Object.assign({}, opts, {method}));
 	ghGot.stream[x] = (url, opts) => ghGot.stream(url, Object.assign({}, opts, {method}));
 }
+
+ghGot.GithubError = createErrorClass('GithubError', function (statusMessage, statusCode) {
+	this.message = `${statusMessage} (${statusCode})`;
+});
 
 module.exports = ghGot;

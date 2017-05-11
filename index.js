@@ -39,10 +39,14 @@ function ghGot(path, opts) {
 	const url = /^https?/.test(path) ? path : opts.endpoint + path;
 
 	if (opts.stream) {
-		return got.stream(url, opts);
+		return got.stream(url, opts).catch((err)  => {
+			throw `GithubError: ${err.statusMessage} (${err.statusCode})`;
+		});
 	}
 
-	return got(url, opts);
+	return got(url, opts).catch((err)  => {
+		throw `GithubError: ${err.statusMessage} (${err.statusCode})`;
+	});
 }
 
 const helpers = [
